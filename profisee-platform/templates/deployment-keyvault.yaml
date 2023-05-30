@@ -17,12 +17,17 @@ spec:
       terminationGracePeriodSeconds: 60
       nodeSelector:
             "kubernetes.io/os": linux
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName: profiseeserviceaccount
       automountServiceAccountToken: false
       containers:
         - name: profisee-keyvault
           image: docker.io/library/alpine:latest
           imagePullPolicy: Always
+          securityContext:
+            readOnlyRootFilesystem: true
           command:
             - /bin/sh
             - "-c"

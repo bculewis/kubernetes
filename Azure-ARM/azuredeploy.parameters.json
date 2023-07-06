@@ -140,6 +140,9 @@
         },
         "AuthenticationType":{
             "value": ""
+        },
+        "EnableDefenderProfile":{
+            "value": ""
         }
     }
 }

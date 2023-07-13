@@ -14,8 +14,8 @@ spec:
     metadata:
       name: profisee
       annotations:
-        instrumentation.opentelemetry.io/inject-dotnet: "true"
-        sidecar.opentelemetry.io/inject: "true"
+        # instrumentation.opentelemetry.io/inject-dotnet: "true"
+        instrumentation.opentelemetry.io/inject-dotnet: "profisee-otlp/my-opentelemetry-collector"
       labels:
         app: profisee
         {{- if .Values.cloud.azure.useManagedIdentity}}

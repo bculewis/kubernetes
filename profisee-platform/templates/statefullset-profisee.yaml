@@ -64,7 +64,8 @@ spec:
         imagePullPolicy: Always
         livenessProbe:
           {{- $profiseeversion := (substr 0 4 .Values.image.tag)|int }}
-          {{- if ge $profiseeversion 2023 }}
+          {{- $tagversion := (substr 4 6 .Values.image.tag)|int }}
+          {{- if and (ge $profiseeversion 2023) (eq $tagversion r2) }}
           httpGet:
             path: /{{.Values.profiseeRunTime.webAppName}}/rest/health
             port: 80

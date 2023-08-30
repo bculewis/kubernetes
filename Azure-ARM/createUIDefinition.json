@@ -119,20 +119,20 @@
             "visible": true
           },
           {
-            "name": "windowsVersionNode",
-            "type": "Microsoft.Common.TextBox",
+            "name": "WindowsNodeVersion",
+            "type": "Microsoft.Common.DropDown",
             "label": "Profisee windows node version",
-            "defaultValue": "windows2019",
+            "defaultValue": "",
             "toolTip": "which windows node version to use",
             "constraints": {
               "required": true,
               "allowedValues": [
                 {
-                  "label": "windows2019",
+                  "label": "windows 2019",
                   "value": "Windows2019"
                 },
                 {
-                  "label": "windows2022",
+                  "label": "windows 2022",
                   "value": "Windows2022"
                 }
               ]
@@ -995,6 +995,7 @@
       "ProfiseeAdminUserAccount": "[steps('profisee').ProfiseeAdminUserAccount]",
       "ProfiseeLicense": "[if(equals(steps('profisee').UseKeyVault, 'Yes'), steps('profisee').ProfiseeLicenseSecret, steps('profisee').ProfiseeLicense)]",
       "ActiveDirectoryCreateApp": "[steps('profisee').ActiveDirectoryCreateApp]",
+      "WindowsNodeVersion": "[steps('profisee').WindowsNodeVersion]",
       "ActiveDirectoryClientId": "[steps('profisee').UserSuppliedClientyId.ActiveDirectoryClientId]",
       "KubernetesClusterName": "[steps('kubernetes').KubernetesClusterName]",
       "KubernetesVersion": "[steps('kubernetes').KubernetesVersion]",

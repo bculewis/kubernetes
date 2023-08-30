@@ -141,6 +141,9 @@
         "AuthenticationType":{
             "value": ""
         },
+        "WindowsNodeVersion":{
+            "value": ""
+        },
         "EnableDefenderProfile":{
             "value": ""
         }

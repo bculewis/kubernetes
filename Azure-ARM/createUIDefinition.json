@@ -123,7 +123,7 @@
             "type": "Microsoft.Common.DropDown",
             "label": "Profisee windows node version",
             "defaultValue": "",
-            "toolTip": "which windows node version to use",
+            "toolTip": "windows node version to use",
             "constraints": {
               "required": true,
               "allowedValues": [

@@ -468,10 +468,12 @@ IFS=':' read -r -a repostring <<< "$PROFISEEVERSION"
 ACRREPONAME="${repostring[0],,}";
 ACRREPOLABEL="${repostring[1],,}"
 
+
 #Installation of Azure File CSI Driver
-if [ "$ACRREPOLABEL" = "2023r2.preview-win22"]; then
+WINDOWS_NODE_VERSION="$(az aks show -n $CLUSTERNAME -g $RESOURCEGROUPNAME --query "agentPoolProfiles[1].osSku" -o tsv)"
+if [ "$WINDOWS_NODE_VERSION" = "Windows2022" ]; then
 	az aks update -n $CLUSTERNAME -g $RESOURCEGROUPNAME --enable-file-driver --yes
-else			
+else
 	echo $"Installation of Azure File CSI Driver started.";
 	echo $"Adding Azure File CSI Driver repo."
 	helm repo add azurefile-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/azurefile-csi-driver/master/charts
@@ -579,7 +581,7 @@ fi
 #Adding Settings.yaml as a secret generated only from the initial deployment of Profisee. Future updates, such as license changes via the profisee-license secret, or SQL credentials updates via the profisee-sql-password secret, will NOT be reflected in this secret. Proceed with caution!
 kubectl delete secret profisee-settings -n profisee --ignore-not-found
 kubectl create secret generic profisee-settings -n profisee --from-file=Settings.yaml
- 
+
 
 
 #################################Install Profisee Start #######################################

@@ -358,23 +358,55 @@ if [ "$UPDATEAAD" = "Yes" ]; then
 
 	#If Azure Application Registration User.Read permission is present, skip adding it.
 	echo $"Let's check to see if the User.Read permission is granted, skip if has been."
-        appregpermissionspresent=$(az ad app permission list --id $CLIENTID --query "[].resourceAccess[].id" -o tsv)
-        if [ "$appregpermissionspresent" = "e1fe6dd8-ba31-4d61-89e7-88639da4683d" ]; then
-	        echo $"User.Read permissions already present, no need to add it."
+    appregpermissionspresent=$(az ad app permission list --id $CLIENTID --query "[].resourceAccess[].id" -o tsv)
+    if [ "$appregpermissionspresent" = "e1fe6dd8-ba31-4d61-89e7-88639da4683d" ]; then
+	    echo $"User.Read permissions already present, no need to add it."
 	else
+	    echo "Update of the application registration's permissions, step 1 started."
+	    #Add a Graph API permission to "Sign in and read user profile"
+	    az ad app permission add --id $CLIENTID --api 00000003-0000-0000-c000-000000000000 --api-permissions e1fe6dd8-ba31-4d61-89e7-88639da4683d=Scope
+	    echo "Creation of the service principal started."
+	    az ad sp create --id $CLIENTID
+	    echo "Creation of the service principal finished."
+	    echo "Update of the application registration's permissions, step 1 finished."
 
-	        echo "Update of the application registration's permissions, step 1 started."
-	        #Add a Graph API permission to "Sign in and read user profile"
-	        az ad app permission add --id $CLIENTID --api 00000003-0000-0000-c000-000000000000 --api-permissions e1fe6dd8-ba31-4d61-89e7-88639da4683d=Scope
-	        echo "Creation of the service principal started."
-	        az ad sp create --id $CLIENTID
-	        echo "Creation of the service principal finished."
-	        echo "Update of the application registration's permissions, step 1 finished."
-
-	        echo "Update of the application registration's permissions, step 2 started."
-	        az ad app permission grant --id $CLIENTID --api 00000003-0000-0000-c000-000000000000 --scope User.Read
-	        echo "Update of the application registration's permissions, step 2 finished."
-	        echo "Update of Azure Active Directory finished.";
+	    echo "Update of the application registration's permissions, step 2 started."
+	    az ad app permission grant --id $CLIENTID --api 00000003-0000-0000-c000-000000000000 --scope User.Read
+	    echo "Update of the application registration's permissions, step 2 finished."
+	    echo "Update of Azure Active Directory finished.";
+	fi
+	#If Azure Application Registration "groups" token is present, skip adding it.
+	echo $"Let's check to see if the "groups" token is present, skip if present."
+    appregtokengroupsclaimpresent=$(az ad app list --app-id $CLIENTID --query "[].optionalClaims[].idToken[].name" -o tsv)
+    if [ "$appregtokengroupsclaimpresent" = "groups" ]; then
+	    echo $"Token is configured with groups token claim, no need to add it."
+	else
+	    echo "Update of the application registration's token configuration started."
+	    #Add a groups claim token for idTokens
+	    az ad app update --id $CLIENTID --set groupMembershipClaims=ApplicationGroup --optional-claims '{"idToken":[{"additionalProperties":[],"essential":false,"name":"groups","source":null}],"accessToken":[{"additionalProperties":[],"essential":false,"name":"groups","source":null}],"saml2Token":[{"additionalProperties":[],"essential":false,"name":"groups","source":null}]}'
+		appregidtokengroupsclaimpresent=$(az ad app list --app-id $CLIENTID --query "[].optionalClaims[].idToken[].name" -o tsv)
+		appregaccesstokengroupsclaimpresent=$(az ad app list --app-id $CLIENTID --query "[].optionalClaims[].accessToken[].name" -o tsv)
+		appregsaml2tokengroupsclaimpresent=$(az ad app list --app-id $CLIENTID --query "[].optionalClaims[].saml2Token[].name" -o tsv)
+		echo $"idToken claim is now '$appregidtokengroupsclaimpresent'"
+		echo $"accessToken claim is now '$appregaccesstokengroupsclaimpresent'"
+		echo $"saml2Token claim is now '$appregsaml2tokengroupsclaimpresent'"
+	    echo "Update of the application registration's token configuration finished."
+	fi
+	#Create application Registration secret to be used for Authentication.
+	echo $"Let's check to see if an application registration secret has been created for Profisee, we'll recreate it if it is present as it can only be acquired during creation."
+    appregsecretpresent=$(az ad app list --app-id $CLIENTID --query "[].passwordCredentials[?displayName=='Profisee env in cluster $CLUSTERNAME'].displayName | [0]" -o tsv)
+	if [ "$appregsecretpresent" = "Profisee env in cluster $CLUSTERNAME" ]; then
+	    echo $"Application registration secret for 'Profisee in cluster $CLUSTERNAME' is already present, but need to recreate it. Acquiring secret ID so it can be deleted."
+		appregsecretid=$(az ad app list --app-id $CLIENTID --query "[].passwordCredentials[?displayName=='Profisee env in cluster $CLUSTERNAME'].keyId | [0]" -o tsv)
+		echo $"Application registration secret ID is $appregsecretid, deleting it."
+		az ad app credential delete --id $CLIENTID --key-id $appregsecretid
+		echo $"Application registration secret ID $appregsecretid has been deleted."
+		echo "Creating new application registration secret now."
+		CLIENTSECRET=$(az ad app credential reset --id $CLIENTID --append --display-name "Profisee env in cluster $CLUSTERNAME" --years 2 --query "password" -o tsv)
+	else
+	    echo "Secret for cluster $CLUSTERNAME does not exist, creating it."
+	    echo "Creating new application registration secret now."
+		CLIENTSECRET=$(az ad app credential reset --id $CLIENTID --append --display-name "Profisee env in cluster $CLUSTERNAME" --years 2 --query "password" -o tsv)
 	fi
 fi
 
@@ -435,6 +467,17 @@ IFS=':' read -r -a repostring <<< "$PROFISEEVERSION"
 #lowercase is the ,,
 ACRREPONAME="${repostring[0],,}";
 ACRREPOLABEL="${repostring[1],,}"
+
+#Installation of Azure File CSI Driver
+if [ "$ACRREPOLABEL" = "2023r2.preview-win22"]; then
+	az aks update -n $CLUSTERNAME -g $RESOURCEGROUPNAME --enable-file-driver --yes
+else			
+	echo $"Installation of Azure File CSI Driver started.";
+	echo $"Adding Azure File CSI Driver repo."
+	helm repo add azurefile-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/azurefile-csi-driver/master/charts
+	helm install azurefile-csi-driver azurefile-csi-driver/azurefile-csi-driver --namespace kube-system --set controller.replicas=1
+	echo $"Azure File CSI Driver installation finished."
+fi
 
 #Get the vCPU and RAM so we can change the stateful set CPU and RAM limits on the fly.
 # echo "Let's see how many vCPUs and how much RAM we can allocate to Profisee's pod on the Windows node size you've selected."
@@ -536,17 +579,8 @@ fi
 #Adding Settings.yaml as a secret generated only from the initial deployment of Profisee. Future updates, such as license changes via the profisee-license secret, or SQL credentials updates via the profisee-sql-password secret, will NOT be reflected in this secret. Proceed with caution!
 kubectl delete secret profisee-settings -n profisee --ignore-not-found
 kubectl create secret generic profisee-settings -n profisee --from-file=Settings.yaml
+ 
 
-#Installation of Azure File CSI Driver
-if [ "$ACRREPOLABEL" = "2023r2.preview-win22"]; then
-	az aks update -n $CLUSTERNAME -g $RESOURCEGROUPNAME --enable-file-driver --yes
-else			
-	echo $"Installation of Azure File CSI Driver started.";
-	echo $"Adding Azure File CSI Driver repo."
-	helm repo add azurefile-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/azurefile-csi-driver/master/charts
-	helm install azurefile-csi-driver azurefile-csi-driver/azurefile-csi-driver --namespace kube-system --set controller.replicas=1
-	echo $"Azure File CSI Driver installation finished."
-fi
 
 #################################Install Profisee Start #######################################
 echo "Installation of Profisee platform started $(date +"%Y-%m-%d %T")";

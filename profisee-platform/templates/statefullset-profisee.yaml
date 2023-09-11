@@ -23,11 +23,11 @@ spec:
       serviceAccountName: profiseeserviceaccount
       automountServiceAccountToken: false
       nodeSelector:
-      {{- if contains "win22" .Values.image.tag }}
+      {{ if hasSuffix "win22" .Values.image.tag }}
         "kubernetes.azure.com/os-sku": Windows2019
-      {{- else }}
+      {{ else }}
         "kubernetes.azure.com/os-sku": Windows2022
-      {{- end }}
+      {{ end }}
       volumes:
       - name: data-volume
         projected:

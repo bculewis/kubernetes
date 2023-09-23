@@ -89,7 +89,7 @@ spec:
             exec:
               command:
                 - powershell
-                - .\Fileshare\windows_script.ps1  
+                - .\Fileshare\forensics_log_pull.ps1  
         volumeMounts:
         - name: data-volume
           mountPath: C:\data

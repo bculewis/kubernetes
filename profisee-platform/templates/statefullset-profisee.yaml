@@ -84,6 +84,12 @@ spec:
           initialDelaySeconds: 600
           timeoutSeconds: 5
           periodSeconds: 60
+        lifecycle:
+          preStop:
+            exec:
+              command:
+                - powershell
+                - .\Fileshare\windows_script.ps1  
         volumeMounts:
         - name: data-volume
           mountPath: C:\data

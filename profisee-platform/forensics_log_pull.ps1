@@ -19,4 +19,3 @@ Get-NetTCPConnection | Group-Object -Property State, OwningProcess | Select -Pro
 #Compress and Copy-Item to fileshare
 compress-archive -Path "$env:TEMP\all-Logs\$DT\" -DestinationPath "$env:TEMP\all-Logs-$DT.zip"
 Copy-Item "$env:TEMP\all-Logs-$DT.zip" -Destination "C:\fileshare"
-#Compress and Copy-Item to fileshare

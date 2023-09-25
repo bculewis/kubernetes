@@ -142,7 +142,7 @@
             "name": "WindowsNodeVersion",
             "type": "Microsoft.Common.DropDown",
             "label": "AKS Windows node OS edition",
-            "defaultValue": "[if(contains(steps('profisee').ProfiseeVersion, '-win22'), 'Windows 2022', 'Windows 2019')]",
+            "defaultValue": "Windows 2019",
             "toolTip": "As of Profisee Version 2023r2.0 Profisee can run on Server 2022 nodes.",
             "constraints": {
               "required": true,
@@ -157,7 +157,7 @@
                 }
               ]
             },
-            "visible": false
+            "visible": true
           },          
           {
             "name": "ProfiseeAdminUserAccount",

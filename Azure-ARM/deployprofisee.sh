@@ -401,6 +401,8 @@ if [ "$UPDATEAAD" = "Yes" ]; then
 		echo $"Application registration secret ID is $appregsecretid, deleting it."
 		az ad app credential delete --id $CLIENTID --key-id $appregsecretid
 		echo $"Application registration secret ID $appregsecretid has been deleted."
+		echo "Will sleep for 10 seconds to avoid request concurrency errors."
+		sleep 10		
 		echo "Creating new application registration secret now."
 		CLIENTSECRET=$(az ad app credential reset --id $CLIENTID --append --display-name "Profisee env in cluster $CLUSTERNAME" --years 2 --query "password" -o tsv)
 	else

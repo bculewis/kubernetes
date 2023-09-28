@@ -33,8 +33,8 @@ printenv;
 
 #Get AKS credentials, this allows us to use kubectl commands, if needed.
 az aks get-credentials --resource-group $RESOURCEGROUPNAME --name $CLUSTERNAME --overwrite-existing;
-# az extension add --name aks-preview
-# az extension update --name aks-preview
+az extension add --name aks-preview
+az extension update --name aks-preview
 # az feature register --namespace "Microsoft.ContainerService" --name "EnableWorkloadIdentityPreview"
 # az feature show --namespace "Microsoft.ContainerService" --name "EnableWorkloadIdentityPreview"
 # az provider register --namespace Microsoft.ContainerService
@@ -472,6 +472,7 @@ ACRREPOLABEL="${repostring[1],,}"
 #Installation of Azure File CSI Driver
 WINDOWS_NODE_VERSION="$(az aks show -n $CLUSTERNAME -g $RESOURCEGROUPNAME --query "agentPoolProfiles[1].osSku" -o tsv)"
 if [ "$WINDOWS_NODE_VERSION" = "Windows2019" ]; then
+	az aks update -n $CLUSTERNAME -g $RESOURCEGROUPNAME --disable-file-driver --yes
 	echo $"Installation of Azure File CSI Driver started.";
 	echo $"Adding Azure File CSI Driver repo."
 	helm repo add azurefile-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/azurefile-csi-driver/master/charts

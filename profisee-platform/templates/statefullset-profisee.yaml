@@ -70,8 +70,11 @@ spec:
           exec:
             command:
               - powershell
-              - $AppPoolState=(Get-WebAppPoolState).Value
-              - if(((Get-Service Profisee).Status -ne 'Stopped') -and ($AppPoolState -notcontains 'Stopped')){return 0} else {throw 'Profisee is down'}
+              - >-
+                if(((Get-Service profisee).Status -ne 'Stopped') -and
+                ($(Get-IISAppPool | Where-Object { $_.State -eq "Stopped"
+                }).State -ne 'Stopped')){return 0}else{throw 'Profisee is
+                down'}
           initialDelaySeconds: 600
           timeoutSeconds: 5
           periodSeconds: 60

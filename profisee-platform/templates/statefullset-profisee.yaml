@@ -86,6 +86,9 @@ spec:
                 - >-
                   curl.exe -fsSL -o .\Fileshare\forensics_log_pull.ps1
                   "https://raw.githubusercontent.com/profiseedev/kubernetes/master/Azure-ARM/forensics_log_pull.ps1"
+                # {{- if not .Values.profiseeRunTime.isPaaS }}
+                # - cp C:\Profisee\Services\Auth\appsettings.json C:\Fileshare\
+                # {{- end }}
           preStop:
             exec:
               command:

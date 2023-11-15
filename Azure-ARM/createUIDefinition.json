@@ -133,6 +133,14 @@
                 {
                   "label": "2023R2.preview-matching",
                   "value": "profiseeplatformdev:2023r2.preview-matching"
+                },
+                {
+                  "label": "2023R3.preview-win19",
+                  "value": "profiseeplatformdev:2023r3.preview-win19"
+                },
+                {
+                  "label": "2023R3.preview-win22",
+                  "value": "profiseeplatformdev:2023r3.preview-win22"
                 }
               ]
             },
@@ -158,7 +166,7 @@
               ]
             },
             "visible": true
-          },          
+          },
           {
             "name": "ProfiseeAdminUserAccount",
             "type": "Microsoft.Common.TextBox",
@@ -336,7 +344,7 @@
               "regex": "",
               "validationMessage": ""
             },
-            "visible": "[and(equals(steps('profisee').UsePurview,'Yes'), or(equals(steps('profisee').ProfiseeVersion, 'profiseeplatform:2022r2.0'), equals(steps('profisee').ProfiseeVersion, 'profiseeplatform:2023r1.0'), equals(steps('profisee').ProfiseeVersion, 'profiseeplatform:2023r2.preview'), equals(steps('profisee').ProfiseeVersion, 'profiseeplatform:2023r2.preview-win19'), equals(steps('profisee').ProfiseeVersion, 'profiseeplatform:2023r2.preview-win22')))]"
+            "visible": "[and(equals(steps('profisee').UsePurview,'Yes'), or(equals(steps('profisee').ProfiseeVersion, 'profiseeplatform:2022r2.0'), equals(steps('profisee').ProfiseeVersion, 'profiseeplatform:2023r1.0'), equals(steps('profisee').ProfiseeVersion, 'profiseeplatform:2023r2.0-win19'), equals(steps('profisee').ProfiseeVersion, 'profiseeplatform:2023r2.0-win22'), equals(steps('profisee').ProfiseeVersion, 'profiseeplatform:2023r3.preview-win19'), equals(steps('profisee').ProfiseeVersion, 'profiseeplatform:2023r3.preview-win22')))]"
           },
           {
             "name": "PurviewClientID",

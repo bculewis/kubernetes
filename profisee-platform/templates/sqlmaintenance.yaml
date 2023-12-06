@@ -4,19 +4,21 @@ kind: CronJob
 metadata:
   name: sqlmaintenance
   namespace: {{.Release.Namespace}}
-  labels:
-    app: profisee
 spec:
-  schedule: "0 19 * * *"
+  schedule: "0 3 * * 0"
   jobTemplate:
     spec:
-      ttlSecondsAfterFinished: 400
+      ttlSecondsAfterFinished: 1200
       template:
-        metadata:
-          name: profisee
-          labels:
-            app: profisee
         spec:
+          nodeSelector:           
+          {{ if hasSuffix "win22" .Values.image.tag }}
+            "kubernetes.azure.com/os-sku": Windows2022
+            "maintenance": sqlcronjobwin22
+          {{ else }}
+            "kubernetes.azure.com/os-sku": Windows2019
+            "maintenance": sqlcronjob
+          {{ end }}
           containers:
           - name: profisee
             image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -51,6 +53,7 @@ spec:
             - $SqlCmd.ExecuteNonQuery();
             - $sqlquery="exec [dbo].[AzureSQLMaintenance] @Operation='all' ,@debug = 'off',@RebuildHeaps = 0,@mode = 'smart',@ResumableIndexRebuild = 0,@LogToTable=1";
             - $SqlCmd.CommandText = $sqlquery;
+            - $SqlCmd.CommandTimeout=0;
             - $SqlCmd.ExecuteNonQuery();
             - $SqlConnection.Close();
           restartPolicy: Never

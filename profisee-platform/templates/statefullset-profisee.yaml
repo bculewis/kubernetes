@@ -23,7 +23,11 @@ spec:
       serviceAccountName: profiseeserviceaccount
       automountServiceAccountToken: false
       nodeSelector:
-        "kubernetes.io/os": windows
+      {{ if hasSuffix "win22" .Values.image.tag }}
+        "kubernetes.azure.com/os-sku": Windows2022
+      {{ else }}
+        "kubernetes.azure.com/os-sku": Windows2019
+      {{ end }}
       volumes:
       - name: data-volume
         projected:
@@ -62,16 +66,49 @@ spec:
       - name: profisee
         image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: Always
+        # livenessProbe:
+        #   exec:
+        #     command:
+        #       - powershell
+        #       - >-
+        #         if(((Get-Service profisee).Status -ne 'Stopped') -and
+        #         ($(Get-IISAppPool | Where-Object { $_.State -eq "Stopped"
+        #         }).State -ne 'Stopped')){return 0}else{throw 'Profisee is
+        #         down'}
         livenessProbe:
+          {{- $profiseeversion := (substr 0 4 .Values.image.tag)|int }}
+          {{- $tagversion := (substr 5 6 .Values.image.tag)|int }}
+          {{- if and (ge $profiseeversion 2023) (eq $tagversion 3) }}
+          httpGet:
+            path: /{{.Values.profiseeRunTime.webAppName}}/rest/health
+            port: 80
+          {{- else }}
           exec:
             command:
               - powershell
               - >-
                 if((Get-Service profisee).Status -ne 'Stopped'){return
                 0}else{throw 'Profisee service is down'}
-          initialDelaySeconds: 600
+          {{- end }}
+          initialDelaySeconds: 200
           timeoutSeconds: 5
-          periodSeconds: 60
+          periodSeconds: 10
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - powershell
+                - >-
+                  curl.exe -fsSL -o .\Fileshare\forensics_log_pull.ps1
+                  "https://raw.githubusercontent.com/profiseedev/kubernetes/master/Azure-ARM/forensics_log_pull.ps1"
+                # {{- if not .Values.profiseeRunTime.isPaaS }}
+                # - cp C:\Profisee\Services\Auth\appsettings.json C:\Fileshare\
+                # {{- end }}
+          preStop:
+            exec:
+              command:
+                - powershell
+                - .\Fileshare\forensics_log_pull.ps1
         volumeMounts:
         - name: data-volume
           mountPath: C:\data

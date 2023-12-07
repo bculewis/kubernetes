@@ -21,7 +21,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: profisee-keyvault
-          image: docker.io/library/alpine:latest
+          image: profisee.azurecr.io/keyvaultalpine:85407
           imagePullPolicy: Always
           command:
             - /bin/sh
@@ -39,4 +39,6 @@ spec:
             readOnly: true
             volumeAttributes:
               secretProviderClass: azure-kvname
+      imagePullSecrets:
+      - name: profisee-containerregistry
 {{- end }}
